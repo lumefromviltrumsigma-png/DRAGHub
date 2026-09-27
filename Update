@@ -1,0 +1,685 @@
+-- Services
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Lighting = game:GetService("Lighting")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+-- UI Library / Main ScreenGui
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "DragHubGui"
+ScreenGui.Parent = game.CoreGui
+ScreenGui.ResetOnSpawn = false
+
+-- Main Frame (Ölçüsü 6 düyməyə uyğunlaşdırıldı: hündürlük 261)
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+MainFrame.BorderColor3 = Color3.fromRGB(60, 60, 60)
+MainFrame.BorderSizePixel = 1
+MainFrame.Position = UDim2.new(0.5, -125, 0.5, -130)
+MainFrame.Size = UDim2.new(0, 250, 0, 261)
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.ClipsDescendants = true
+
+-- Top Bar (Başlıq hissəsi)
+local TopBar = Instance.new("Frame")
+TopBar.Name = "TopBar"
+TopBar.Parent = MainFrame
+TopBar.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+TopBar.BorderColor3 = Color3.fromRGB(60, 60, 60)
+TopBar.BorderSizePixel = 1
+TopBar.Size = UDim2.new(1, 0, 0, 25)
+
+-- Title (Drag Hub)
+local Title = Instance.new("TextLabel")
+Title.Parent = TopBar
+Title.BackgroundTransparency = 1
+Title.Position = UDim2.new(0, 8, 0, 0)
+Title.Size = UDim2.new(0, 150, 1, 0)
+Title.Font = Enum.Font.Code
+Title.Text = "Drag Hub"
+Title.TextColor3 = Color3.fromRGB(240, 240, 240)
+Title.TextSize = 13
+Title.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Minimize Button
+local MinimizeBtn = Instance.new("TextButton")
+MinimizeBtn.Name = "MinimizeBtn"
+MinimizeBtn.Parent = TopBar
+MinimizeBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+MinimizeBtn.BorderColor3 = Color3.fromRGB(70, 70, 70)
+MinimizeBtn.BorderSizePixel = 1
+MinimizeBtn.Position = UDim2.new(1, -52, 0, 3)
+MinimizeBtn.Size = UDim2.new(0, 20, 0, 19)
+MinimizeBtn.Font = Enum.Font.Code
+MinimizeBtn.Text = "-"
+MinimizeBtn.TextColor3 = Color3.fromRGB(220, 220, 220)
+MinimizeBtn.TextSize = 14
+
+-- Close Button
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Name = "CloseBtn"
+CloseBtn.Parent = TopBar
+CloseBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+CloseBtn.BorderColor3 = Color3.fromRGB(70, 70, 70)
+CloseBtn.BorderSizePixel = 1
+CloseBtn.Position = UDim2.new(1, -26, 0, 3)
+CloseBtn.Size = UDim2.new(0, 20, 0, 19)
+CloseBtn.Font = Enum.Font.Code
+CloseBtn.Text = "X"
+CloseBtn.TextColor3 = Color3.fromRGB(220, 220, 220)
+CloseBtn.TextSize = 12
+
+-- Container for Buttons
+local ButtonContainer = Instance.new("Frame")
+ButtonContainer.Parent = MainFrame
+ButtonContainer.BackgroundTransparency = 1
+ButtonContainer.Position = UDim2.new(0, 10, 0, 35)
+ButtonContainer.Size = UDim2.new(1, -20, 1, -45)
+
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.Parent = ButtonContainer
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Padding = UDim.new(0, 8)
+
+-- 1-ci Düymə: Player ESP
+local ESPButton = Instance.new("TextButton")
+ESPButton.Name = "ESPButton"
+ESPButton.Parent = ButtonContainer
+ESPButton.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+ESPButton.BorderColor3 = Color3.fromRGB(50, 50, 50)
+ESPButton.BorderSizePixel = 1
+ESPButton.Size = UDim2.new(1, 0, 0, 30)
+ESPButton.Font = Enum.Font.Code
+ESPButton.Text = "Player ESP: OFF"
+ESPButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+ESPButton.TextSize = 12
+ESPButton.LayoutOrder = 1
+
+-- 2-ci Düymə: Role ESP (Hider/Seeker)
+local RoleESPButton = Instance.new("TextButton")
+RoleESPButton.Name = "RoleESPButton"
+RoleESPButton.Parent = ButtonContainer
+RoleESPButton.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+RoleESPButton.BorderColor3 = Color3.fromRGB(50, 50, 50)
+RoleESPButton.BorderSizePixel = 1
+RoleESPButton.Size = UDim2.new(1, 0, 0, 30)
+RoleESPButton.Font = Enum.Font.Code
+RoleESPButton.Text = "Role ESP: OFF"
+RoleESPButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+RoleESPButton.TextSize = 12
+RoleESPButton.LayoutOrder = 2
+
+-- 3-cü Düymə: Full Bright
+local FullBrightButton = Instance.new("TextButton")
+FullBrightButton.Name = "FullBrightButton"
+FullBrightButton.Parent = ButtonContainer
+FullBrightButton.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+FullBrightButton.BorderColor3 = Color3.fromRGB(50, 50, 50)
+FullBrightButton.BorderSizePixel = 1
+FullBrightButton.Size = UDim2.new(1, 0, 0, 30)
+FullBrightButton.Font = Enum.Font.Code
+FullBrightButton.Text = "Full Bright: OFF"
+FullBrightButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+FullBrightButton.TextSize = 12
+FullBrightButton.LayoutOrder = 3
+
+-- 4-cü Düymə: Permanent Guard
+local PermGuardButton = Instance.new("TextButton")
+PermGuardButton.Name = "PermGuardButton"
+PermGuardButton.Parent = ButtonContainer
+PermGuardButton.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+PermGuardButton.BorderColor3 = Color3.fromRGB(50, 50, 50)
+PermGuardButton.BorderSizePixel = 1
+PermGuardButton.Size = UDim2.new(1, 0, 0, 30)
+PermGuardButton.Font = Enum.Font.Code
+PermGuardButton.Text = "Permanent Guard: OFF"
+PermGuardButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+PermGuardButton.TextSize = 12
+PermGuardButton.LayoutOrder = 4
+
+-- 5-ci Düymə: Arcade Auto Farm
+local ArcadeFarmButton = Instance.new("TextButton")
+ArcadeFarmButton.Name = "ArcadeFarmButton"
+ArcadeFarmButton.Parent = ButtonContainer
+ArcadeFarmButton.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+ArcadeFarmButton.BorderColor3 = Color3.fromRGB(50, 50, 50)
+ArcadeFarmButton.BorderSizePixel = 1
+ArcadeFarmButton.Size = UDim2.new(1, 0, 0, 30)
+ArcadeFarmButton.Font = Enum.Font.Code
+ArcadeFarmButton.Text = "Arcade Auto Farm: OFF"
+ArcadeFarmButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+ArcadeFarmButton.TextSize = 12
+ArcadeFarmButton.LayoutOrder = 5
+
+-- 6-cı Düymə: Rage Auto QTE
+local RageQTEButton = Instance.new("TextButton")
+RageQTEButton.Name = "RageQTEButton"
+RageQTEButton.Parent = ButtonContainer
+RageQTEButton.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+RageQTEButton.BorderColor3 = Color3.fromRGB(50, 50, 50)
+RageQTEButton.BorderSizePixel = 1
+RageQTEButton.Size = UDim2.new(1, 0, 0, 30)
+RageQTEButton.Font = Enum.Font.Code
+RageQTEButton.Text = "Rage Auto QTE: OFF"
+RageQTEButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+RageQTEButton.TextSize = 12
+RageQTEButton.LayoutOrder = 6
+
+-- Smooth Animation for Minimize / Expand
+local minimized = false
+MinimizeBtn.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    local targetSize = minimized and UDim2.new(0, 250, 0, 25) or UDim2.new(0, 250, 0, 261)
+    local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    
+    if minimized then
+        ButtonContainer.Visible = false
+        local tween = TweenService:Create(MainFrame, tweenInfo, {Size = targetSize})
+        tween:Play()
+        MinimizeBtn.Text = "+"
+    else
+        local tween = TweenService:Create(MainFrame, tweenInfo, {Size = targetSize})
+        tween:Play()
+        tween.Completed:Connect(function()
+            if not minimized then
+                ButtonContainer.Visible = true
+            end
+        end)
+        MinimizeBtn.Text = "-"
+    end
+end)
+
+-- Close Logic
+CloseBtn.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
+
+-- 1-ci ESP Logic (Can rəngləri ilə, adsız)
+local espEnabled = false
+local espConnections = {}
+
+local function createESP(player)
+    if player == LocalPlayer then return end
+    
+    local function setupCharacter(char)
+        local humanoidRootPart = char:WaitForChild("HumanoidRootPart", 5)
+        local humanoid = char:WaitForChild("Humanoid", 5)
+        if not humanoidRootPart or not humanoid then return end
+
+        local billboard = Instance.new("BillboardGui")
+        billboard.Name = "CustomESP"
+        billboard.AlwaysOnTop = true
+        billboard.Size = UDim2.new(0, 80, 0, 30)
+        billboard.StudsOffset = Vector3.new(0, 2.5, 0)
+        billboard.Parent = humanoidRootPart
+
+        local textLabel = Instance.new("TextLabel")
+        textLabel.Parent = billboard
+        textLabel.BackgroundTransparency = 1
+        textLabel.Size = UDim2.new(1, 0, 1, 0)
+        textLabel.Font = Enum.Font.Code
+        textLabel.TextStrokeTransparency = 0
+        textLabel.TextSize = 13
+
+        local highlight = Instance.new("Highlight")
+        highlight.Name = "ESPHighlight"
+        highlight.Adornee = char
+        highlight.FillTransparency = 1
+        highlight.OutlineTransparency = 0
+        highlight.Parent = char
+        highlight.Enabled = espEnabled
+
+        billboard.Enabled = espEnabled
+
+        local connection
+        connection = RunService.RenderStepped:Connect(function()
+            if not char or not humanoid or humanoid.Health <= 0 then
+                billboard:Destroy()
+                if highlight then highlight:Destroy() end
+                if connection then connection:Disconnect() end
+                return
+            end
+
+            local currentHP = math.floor(humanoid.Health)
+            local maxHP = math.floor(humanoid.MaxHealth)
+            local healthPercent = currentHP / maxHP
+
+            local healthColor = Color3.fromRGB(0, 255, 0) -- Yaşıl (Full)
+            if healthPercent <= 0.25 then
+                healthColor = Color3.fromRGB(120, 0, 0) -- Tünd Qırmızı (<25%)
+            elseif healthPercent <= 0.49 then
+                healthColor = Color3.fromRGB(255, 0, 0) -- Qırmızı (25% - 49%)
+            elseif healthPercent < 1 then
+                healthColor = Color3.fromRGB(255, 255, 0) -- Sarı (50% - 99%)
+            end
+
+            textLabel.TextColor3 = healthColor
+            highlight.OutlineColor = healthColor
+            textLabel.Text = currentHP .. "/" .. maxHP
+        end)
+        
+        table.insert(espConnections, connection)
+    end
+
+    if player.Character then
+        setupCharacter(player.Character)
+    end
+    table.insert(espConnections, player.CharacterAdded:Connect(setupCharacter))
+end
+
+table.insert(espConnections, Players.PlayerAdded:Connect(createESP))
+
+ESPButton.MouseButton1Click:Connect(function()
+    espEnabled = not espEnabled
+    if espEnabled then
+        ESPButton.Text = "Player ESP: ON"
+        ESPButton.TextColor3 = Color3.fromRGB(0, 255, 255)
+        ESPButton.BorderColor3 = Color3.fromRGB(0, 255, 255)
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character then
+                local bb = p.Character:FindFirstChild("HumanoidRootPart") and p.Character.HumanoidRootPart:FindFirstChild("CustomESP")
+                local hl = p.Character:FindFirstChild("ESPHighlight")
+                if bb then bb.Enabled = true end
+                if hl then hl.Enabled = true end
+            end
+        end
+    else
+        ESPButton.Text = "Player ESP: OFF"
+        ESPButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+        ESPButton.BorderColor3 = Color3.fromRGB(50, 50, 50)
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character then
+                local bb = p.Character:FindFirstChild("HumanoidRootPart") and p.Character.HumanoidRootPart:FindFirstChild("CustomESP")
+                local hl = p.Character:FindFirstChild("ESPHighlight")
+                if bb then bb.Enabled = false end
+                if hl then hl.Enabled = false end
+            end
+        end
+    end
+end)
+
+for _, p in ipairs(Players:GetPlayers()) do
+    createESP(p)
+end
+
+-- 2-ci Role ESP Logic (Hider -> Mavi, Seeker -> Qırmızı, Ad və Can ilə)
+local roleEspEnabled = false
+local roleConnections = {}
+
+local function setupRoleESP(player)
+    if player == LocalPlayer then return end
+
+    local function applyRole(char)
+        local hrp = char:WaitForChild("HumanoidRootPart", 5)
+        local hum = char:WaitForChild("Humanoid", 5)
+        if not hrp or not hum then return end
+
+        local isHider = player:GetAttribute("IsHider") or (player.Team and player.Team.Name:lower():find("hider"))
+        local isSeeker = player:GetAttribute("IsHunter") or player:GetAttribute("IsSeeker") or (player.Team and (player.Team.Name:lower():find("seeker") or player.Team.Name:lower():find("hunter")))
+
+        local roleColor = Color3.fromRGB(0, 150, 255) -- Mavi (Hider)
+        local roleTextName = "HIDER"
+
+        if isSeeker or (player.Team and player.Team.Name:lower():find("seeker")) then
+            roleColor = Color3.fromRGB(255, 50, 50) -- Qırmızı (Seeker)
+            roleTextName = "SEEKER"
+        end
+
+        local billboard = Instance.new("BillboardGui")
+        billboard.Name = "RoleESP_BB"
+        billboard.AlwaysOnTop = true
+        billboard.Size = UDim2.new(0, 120, 0, 50)
+        billboard.StudsOffset = Vector3.new(0, 2.5, 0)
+        billboard.Parent = hrp
+        billboard.Enabled = roleEspEnabled
+
+        local textLabel = Instance.new("TextLabel")
+        textLabel.Parent = billboard
+        textLabel.BackgroundTransparency = 1
+        textLabel.Size = UDim2.new(1, 0, 1, 0)
+        textLabel.Font = Enum.Font.Code
+        textLabel.TextColor3 = roleColor
+        textLabel.TextStrokeTransparency = 0
+        textLabel.TextSize = 12
+
+        local highlight = Instance.new("Highlight")
+        highlight.Name = "RoleESP_HL"
+        highlight.Adornee = char
+        highlight.FillTransparency = 0.5
+        highlight.FillColor = roleColor
+        highlight.OutlineColor = roleColor
+        highlight.OutlineTransparency = 0
+        highlight.Parent = char
+        highlight.Enabled = roleEspEnabled
+
+        local conn
+        conn = RunService.RenderStepped:Connect(function()
+            if not char or not hum or hum.Health <= 0 then
+                billboard:Destroy()
+                if highlight then highlight:Destroy() end
+                if conn then conn:Disconnect() end
+                return
+            end
+            local curHp = math.floor(hum.Health)
+            local maxHp = math.floor(hum.MaxHealth)
+            textLabel.Text = player.Name .. " [" .. roleTextName .. "]\nHP: " .. curHp .. "/" .. maxHp
+        end)
+        table.insert(roleConnections, conn)
+    end
+
+    if player.Character then
+        applyRole(player.Character)
+    end
+    table.insert(roleConnections, player.CharacterAdded:Connect(applyRole))
+end
+
+RoleESPButton.MouseButton1Click:Connect(function()
+    roleEspEnabled = not roleEspEnabled
+    if roleEspEnabled then
+        RoleESPButton.Text = "Role ESP: ON"
+        RoleESPButton.TextColor3 = Color3.fromRGB(50, 255, 50)
+        RoleESPButton.BorderColor3 = Color3.fromRGB(50, 255, 50)
+        
+        for _, p in ipairs(Players:GetPlayers()) do
+            setupRoleESP(p)
+        end
+    else
+        RoleESPButton.Text = "Role ESP: OFF"
+        RoleESPButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+        RoleESPButton.BorderColor3 = Color3.fromRGB(50, 50, 50)
+        
+        for _, conn in ipairs(roleConnections) do
+            if conn and conn.Connected then
+                conn:Disconnect()
+            end
+        end
+        table.clear(roleConnections)
+
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p.Character then
+                local bb = p.Character:FindFirstChild("HumanoidRootPart") and p.Character.HumanoidRootPart:FindFirstChild("RoleESP_BB")
+                local hl = p.Character:FindFirstChild("RoleESP_HL")
+                if bb then bb:Destroy() end
+                if hl then hl:Destroy() end
+            end
+        end
+    end
+end)
+
+-- 3-cü: Full Bright Mexanizmi
+local fullBrightEnabled = false
+local brightConnection = nil
+
+local oldBrightness = Lighting.Brightness
+local oldClockTime = Lighting.ClockTime
+local oldFogEnd = Lighting.FogEnd
+local oldGlobalShadows = Lighting.GlobalShadows
+local oldOutdoorAmbient = Lighting.OutdoorAmbient
+
+FullBrightButton.MouseButton1Click:Connect(function()
+    fullBrightEnabled = not fullBrightEnabled
+
+    if fullBrightEnabled then
+        FullBrightButton.Text = "Full Bright: ON"
+        FullBrightButton.TextColor3 = Color3.fromRGB(255, 215, 0)
+        FullBrightButton.BorderColor3 = Color3.fromRGB(255, 215, 0)
+
+        oldBrightness = Lighting.Brightness
+        oldClockTime = Lighting.ClockTime
+        oldFogEnd = Lighting.FogEnd
+        oldGlobalShadows = Lighting.GlobalShadows
+        oldOutdoorAmbient = Lighting.OutdoorAmbient
+
+        Lighting.Brightness = 2
+        Lighting.ClockTime = 14
+        Lighting.FogEnd = 100000
+        Lighting.GlobalShadows = false
+        Lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 255)
+
+        brightConnection = RunService.RenderStepped:Connect(function()
+            if not fullBrightEnabled then return end
+            Lighting.Brightness = 2
+            Lighting.ClockTime = 14
+            Lighting.FogEnd = 100000
+            Lighting.GlobalShadows = false
+            Lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 255)
+        end)
+    else
+        FullBrightButton.Text = "Full Bright: OFF"
+        FullBrightButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+        FullBrightButton.BorderColor3 = Color3.fromRGB(50, 50, 50)
+
+        if brightConnection then
+            brightConnection:Disconnect()
+            brightConnection = nil
+        end
+
+        Lighting.Brightness = oldBrightness
+        Lighting.ClockTime = oldClockTime
+        Lighting.FogEnd = oldFogEnd
+        Lighting.GlobalShadows = oldGlobalShadows
+        Lighting.OutdoorAmbient = oldOutdoorAmbient
+    end
+end)
+
+-- 4-cü: Permanent Guard Mexanizmi
+local permanentGuardEnabled = false
+
+local function toggle_permanent_guard(enabled)
+    permanentGuardEnabled = enabled
+    LocalPlayer:SetAttribute("__OwnsPermGuard", enabled)
+    return true
+end
+
+PermGuardButton.MouseButton1Click:Connect(function()
+    local newState = not permanentGuardEnabled
+    toggle_permanent_guard(newState)
+
+    if newState then
+        PermGuardButton.Text = "Permanent Guard: ON"
+        PermGuardButton.TextColor3 = Color3.fromRGB(0, 255, 128)
+        PermGuardButton.BorderColor3 = Color3.fromRGB(0, 255, 128)
+    else
+        PermGuardButton.Text = "Permanent Guard: OFF"
+        PermGuardButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+        PermGuardButton.BorderColor3 = Color3.fromRGB(50, 50, 50)
+    end
+end)
+
+-- 5-ci: Arcade Auto Farm Mexanizmi
+local ArcadeAutoFarmEnabled = false
+local ArcadeAutoFarmTask = nil
+local ArcadeCurrentGame = nil
+local ArcadeConsoleCache = nil
+
+local function getArcadeConsole()
+    if ArcadeConsoleCache and ArcadeConsoleCache.Parent then
+        return ArcadeConsoleCache
+    end
+
+    for _, descendant in workspace:GetDescendants() do
+        local screen = descendant:FindFirstChild("Screen")
+        if screen and screen:FindFirstChild("SurfaceGui") then
+            ArcadeConsoleCache = descendant
+            return descendant
+        end
+    end
+    return nil
+end
+
+local function runArcadeFarm()
+    local ok, PlayableArcadeGame = pcall(function()
+        return require(ReplicatedStorage.Modules.PlayableArcadeGame)
+    end)
+
+    if not ok or not PlayableArcadeGame then return end
+    local arcadeConsole = getArcadeConsole()
+    if not arcadeConsole then return end
+    local character = LocalPlayer.Character
+    if not character then return end
+    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+    if not humanoidRootPart then return end
+
+    if ArcadeCurrentGame then
+        pcall(function()
+            ArcadeCurrentGame.Stopping = true
+            ArcadeCurrentGame:Destroy()
+        end)
+        ArcadeCurrentGame = nil
+    end
+
+    local gameObject = PlayableArcadeGame.new(arcadeConsole, humanoidRootPart)
+    ArcadeCurrentGame = gameObject
+    gameObject:start()
+
+    local startTime = os.clock()
+    while gameObject.State ~= "Running" and os.clock() - startTime < 3 do
+        if not ArcadeAutoFarmEnabled then return end
+        task.wait()
+    end
+
+    if not ArcadeAutoFarmEnabled then return end
+    if gameObject.State ~= "Running" then
+        pcall(function() gameObject:Destroy() end)
+        ArcadeCurrentGame = nil
+        return
+    end
+
+    gameObject.Score = 4499
+    if gameObject.ScoreLabel then
+        gameObject.ScoreLabel.Text = "Score: 4499"
+    end
+
+    table.clear(gameObject.CalculateScore)
+    for i = 1, 99 do
+        table.insert(gameObject.CalculateScore, "Coin")
+    end
+
+    gameObject:win("You Won! Congrats! :D")
+end
+
+local function toggleArcadeAutoFarm(enabled)
+    ArcadeAutoFarmEnabled = enabled and true or false
+
+    if not ArcadeAutoFarmEnabled then
+        if ArcadeAutoFarmTask then
+            pcall(function() task.cancel(ArcadeAutoFarmTask) end)
+            ArcadeAutoFarmTask = nil
+        end
+        if ArcadeCurrentGame then
+            pcall(function()
+                ArcadeCurrentGame.Stopping = true
+                ArcadeCurrentGame:Destroy()
+            end)
+            ArcadeCurrentGame = nil
+        end
+        return true
+    end
+
+    ArcadeAutoFarmTask = task.spawn(function()
+        while ArcadeAutoFarmEnabled do
+            pcall(runArcadeFarm)
+            if ArcadeAutoFarmEnabled then
+                task.wait(1)
+            else
+                break
+            end
+        end
+        ArcadeAutoFarmTask = nil
+    end)
+    return true
+end
+
+ArcadeFarmButton.MouseButton1Click:Connect(function()
+    local newState = not ArcadeAutoFarmEnabled
+    toggleArcadeAutoFarm(newState)
+
+    if newState then
+        ArcadeFarmButton.Text = "Arcade Auto Farm: ON"
+        ArcadeFarmButton.TextColor3 = Color3.fromRGB(0, 255, 255)
+        ArcadeFarmButton.BorderColor3 = Color3.fromRGB(0, 255, 255)
+    else
+        ArcadeFarmButton.Text = "Arcade Auto Farm: OFF"
+        ArcadeFarmButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+        ArcadeFarmButton.BorderColor3 = Color3.fromRGB(50, 50, 50)
+    end
+end)
+
+-- 6-cı: Rage Auto QTE Mexanizmi
+local RageAutoQTEEnabled = false
+local RageAutoQTELoop = nil
+
+local function toggle_rage_auto_qte(enabled)
+    RageAutoQTEEnabled = enabled and true or false
+
+    if RageAutoQTELoop then
+        task.cancel(RageAutoQTELoop)
+        RageAutoQTELoop = nil
+    end
+
+    if not RageAutoQTEEnabled then
+        return true
+    end
+
+    RageAutoQTELoop = task.spawn(function()
+        local ok, HBGQTE = pcall(function()
+            return require(
+                ReplicatedStorage
+                    :WaitForChild("Modules")
+                    :WaitForChild("HBGQTE")
+            )
+        end)
+
+        if not ok or not HBGQTE then
+            RageAutoQTEEnabled = false
+            return
+        end
+
+        while RageAutoQTEEnabled do
+            task.wait(0.05)
+
+            pcall(function()
+                if HBGQTE.ActiveButtons then
+                    for _, activeButton in pairs(HBGQTE.ActiveButtons) do
+                        if activeButton
+                            and activeButton.Inner
+                            and activeButton.Outer
+                            and not activeButton.Inner:GetAttribute("Tweening")
+                            and not activeButton.Inner:GetAttribute("Failed") then
+
+                            pcall(function()
+                                HBGQTE.Pressed(
+                                    false,
+                                    activeButton
+                                )
+                            end)
+                        end
+                    end
+                end
+            end)
+        end
+    end)
+
+    return true
+end
+
+RageQTEButton.MouseButton1Click:Connect(function()
+    local newState = not RageAutoQTEEnabled
+    toggle_rage_auto_qte(newState)
+
+    if newState then
+        RageQTEButton.Text = "Rage Auto QTE: ON"
+        RageQTEButton.TextColor3 = Color3.fromRGB(255, 100, 255)
+        RageQTEButton.BorderColor3 = Color3.fromRGB(255, 100, 255)
+    else
+        RageQTEButton.Text = "Rage Auto QTE: OFF"
+        RageQTEButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+        RageQTEButton.BorderColor3 = Color3.fromRGB(50, 50, 50)
+    end
+end)
